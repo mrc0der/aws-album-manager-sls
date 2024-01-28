@@ -1,0 +1,49 @@
+{
+    "id": "WH-2WR32451HC0233532-XXXXXXXX",
+    "create_time": "2024-01-28T19:20:30+00:00",
+    "resource_type": "sale",
+    "event_type": "PAYMENT.SALE.COMPLETED",
+    "summary": "Payment completed for $ 20.0 USD",
+    "resource": {
+      "id": "80021663DE681814L",
+      "state": "completed",
+      "amount": {
+        "total": "20.00",
+        "currency": "USD",
+        "details": {
+          "subtotal": "20.00"
+        }
+      },
+      "payment_mode": "INSTANT_TRANSFER",
+      "create_time": "2024-01-28T19:18:49Z",
+      "update_time": "2024-01-28T19:20:02Z",
+      "links": [
+        {
+          "href": "https://api.paypal.com/v1/payments/sale/80021663DE681814L",
+          "rel": "self",
+          "method": "GET"
+        }
+      ],
+      "parent_payment": "PAY-1234567890123456ABCDEFGHIJKL",
+      "transaction_fee": {
+        "value": "0.88",
+        "currency": "USD"
+      },
+      "invoice_number": "invoice123",
+      "custom": "CustomFieldValue",
+      "soft_descriptor": "Payment to Merchant"
+    },
+    "links": [
+      {
+        "href": "https://api.paypal.com/v1/notifications/webhooks-events/WH-2WR32451HC0233532-XXXXXXXX",
+        "rel": "self",
+        "method": "GET"
+      },
+      {
+        "href": "https://api.paypal.com/v1/notifications/webhooks-events/WH-2WR32451HC0233532-XXXXXXXX/resend",
+        "rel": "resend",
+        "method": "POST"
+      }
+    ]
+  }
+  

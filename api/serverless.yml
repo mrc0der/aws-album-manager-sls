@@ -1,0 +1,155 @@
+service: album-manager
+
+plugins:
+  - serverless-python-requirements
+
+
+provider:
+  name: aws
+  runtime: python3.11
+  stage: dev
+  region: us-east-1
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+        - dynamodb:GetItem
+        - s3:GetObject
+        - ses:SendEmail
+      Resource: "*"
+
+functions:
+  webhookReceiver:
+    handler: api.webhook_receiver
+    events:
+      - http:
+          path: webhook
+          method: post
+          cors: true
+
+  orderRetrieval:
+    handler: api.order_retrieval
+    events:
+      - http:
+          path: orders/{order_id}
+          method: get
+          cors: true
+
+  createClient:
+    handler: api.create_client
+    events:
+      - http:
+          path: clients
+          method: post
+          cors: true
+  # Define other Lambda functions for get, update, delete, and list operations
+
+resources:
+  Resources:
+    ClientsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: Clients
+        AttributeDefinitions:
+          - AttributeName: clientID
+            AttributeType: S
+        KeySchema:
+          - AttributeName: clientID
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    PayPalWebhooksTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: PayPalWebhooks
+        AttributeDefinitions:
+          - AttributeName: order_id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: order_id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    # Lambda Function Errors Alarm
+    LambdaErrorsAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: lambda-errors-alarm
+        AlarmDescription: "Alarm when the Lambda function errors exceed a threshold"
+        Namespace: "AWS/Lambda"
+        MetricName: "Errors"
+        Dimensions:
+          - Name: "FunctionName"
+            Value: { "Ref": "WebhookReceiverLambdaFunction" }  # Use your actual Lambda function's logical ID
+        Statistic: "Sum"
+        Period: 300  # 5 minutes
+        EvaluationPeriods: 1
+        Threshold: 1
+        ComparisonOperator: "GreaterThanOrEqualToThreshold"
+        AlarmActions: [ { "Ref": "YourSnsTopic" } ]  # SNS topic ARN to notify
+        TreatMissingData: "notBreaching"
+
+    # DynamoDB Read Capacity Alarm
+    DynamoDBReadCapacityAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: dynamodb-read-capacity-alarm
+        AlarmDescription: "Alarm when DynamoDB read capacity units exceed a threshold"
+        Namespace: "AWS/DynamoDB"
+        MetricName: "ConsumedReadCapacityUnits"
+        Dimensions:
+          - Name: "TableName"
+            Value: "YourDynamoDBTableName"  # Specify your DynamoDB table name
+        Statistic: "Sum"
+        Period: 300  # 5 minutes
+        EvaluationPeriods: 1
+        Threshold: 100  # Threshold for read capacity units
+        ComparisonOperator: "GreaterThanOrEqualToThreshold"
+        AlarmActions: [ { "Ref": "YourSnsTopic" } ]
+        TreatMissingData: "notBreaching"
+
+    # S3 Bucket 4xx Errors Alarm
+    S3BucketErrorsAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: s3-bucket-4xx-errors-alarm
+        AlarmDescription: "Alarm when the number of 4XX errors for an S3 bucket exceed a threshold"
+        Namespace: "AWS/S3"
+        MetricName: "4xxErrors"
+        Dimensions:
+          - Name: "BucketName"
+            Value: "YourS3BucketName"  # Specify your S3 bucket name
+          - Name: "FilterId"
+            Value: "EntireBucket"
+        Statistic: "Sum"
+        Period: 300  # 5 minutes
+        EvaluationPeriods: 1
+        Threshold: 10  # Threshold for 4XX errors
+        ComparisonOperator: "GreaterThanOrEqualToThreshold"
+        AlarmActions: [ { "Ref": "YourSnsTopic" } ]
+        TreatMissingData: "notBreaching"
+
+    # SES Sending Quota Alarm
+    SESSendingQuotaAlarm:
+      Type: AWS::CloudWatch::Alarm
+      Properties:
+        AlarmName: ses-sending-quota-alarm
+        AlarmDescription: "Alarm when SES sending quota usage exceeds a percentage"
+        Namespace: "AWS/SES"
+        MetricName: "SendQuota"
+        Statistic: "Average"
+        Period: 3600  # 1 hour
+        EvaluationPeriods: 1
+        Threshold: 80  # 80% of your sending quota
+        ComparisonOperator: "GreaterThanOrEqualToThreshold"
+        AlarmActions: [ { "Ref": "YourSnsTopic" } ]
+        TreatMissingData: "notBreaching"
+
+  # Define an SNS topic for alarm notifications
+  YourSnsTopic:
+    Type: "AWS::SNS::Topic"
+    Properties:
+      TopicName: "your-sns-topic-for-alarms"
+      Subscription:
+        - Endpoint: "your-email@example.com"  # Replace with your email
+          Protocol: "email"
