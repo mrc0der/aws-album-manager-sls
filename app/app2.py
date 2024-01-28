@@ -8,6 +8,47 @@ import hashlib
 import hmac
 import base64
 
+ENV = dev
+# Base directory where albums are stored
+BASE_DIR = '/Media/NAS/Clients/'
+HMAC_SEC_KEY = get_secret_from_ssm(f'/album/manager/{ENV}/hmac_key')
+BE_API = 'https://api.n3rd-media.com/v1'
+CLIENTS_API = f"{BE_API}/clients"
+ALBUMS_API = f"{BE_API}/albums"
+
+# aws clients
+SSM_CLIENT = boto3.client('ssm')
+
+
+def get_clients():
+    send_signed_request(CLIENTS_API)
+
+def get_secret_from_ssm(parameter_name, with_decryption=True):
+    """
+    Retrieve a secret value from AWS Systems Manager Parameter Store.
+
+    Args:
+        parameter_name (str): The name of the parameter you want to retrieve.
+        with_decryption (bool): Whether to decrypt the parameter value (for SecureString types).
+
+    Returns:
+        str: The value of the parameter if successful, None otherwise.
+    """
+    # Initialize the SSM client
+    
+
+    try:
+        # Get the parameter
+        response = SSM_CLIENT.get_parameter(
+            Name=parameter_name,
+            WithDecryption=with_decryption
+        )
+        # Return the parameter value
+        return response['Parameter']['Value']
+    except ClientError as e:
+        print(f"Failed to retrieve parameter {parameter_name}: {e}")
+        return None
+
 def generate_hmac_signature(secret_key, message):
     message_bytes = message.encode('utf-8')
     secret_key_bytes = secret_key.encode('utf-8')
@@ -15,11 +56,20 @@ def generate_hmac_signature(secret_key, message):
     signature_base64 = base64.b64encode(signature).decode('utf-8')
     return signature_base64
 
-# Usage example
-secret_key = "your_shared_secret_key"
-request_content = "your_request_content_here"
-signature = generate_hmac_signature(secret_key, request_content)
+def send_signed_request(url, data=None, headers, type='get'):
+    if headers is None:
+        headers = {}
 
+    headers['X-Signature'] = generate_hmac_signature(HMAC_SEC_KEY, data)
+
+    if type == 'get':
+        requests.get(url, headers=headers, data=data)
+    elif type == 'post'
+        requests.post(url, headers=headers, data=data)
+    else:
+        print(f"Unkown type={type}")
+
+# Add the signature to the 'X-Signature' header for the request
 
 class ProgressPercentage(object):
     def __init__(self, filename):
@@ -40,8 +90,7 @@ class ProgressPercentage(object):
             sys.stdout.flush()
 
 
-# Base directory where albums are stored
-BASE_DIR = '/Media/NAS/Clients/'
+
 
 def create_album_zip(client_name, album_name):
     album_path = os.path.join(BASE_DIR, client_name, 'albums', album_name)

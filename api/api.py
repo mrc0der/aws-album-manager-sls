@@ -8,9 +8,11 @@ import zipfile
 import tempfile
 import uuid
 
+ENV = dev
+
 S3_EXP = 3600
-PP_CLIENT_ID = get_secret_from_ssm("/album-manager/prod/paypal_cleint_id")
-PP_CLIENT_SECRET = get_secret_from_ssm("/album-manager/prod/paypal_cleint_secret")
+PP_CLIENT_ID = get_secret_from_ssm(f"/album-manager/{ENV}/paypal_cleint_id")
+PP_CLIENT_SECRET = get_secret_from_ssm(f"/album-manager/{ENV}}/paypal_cleint_secret")
 
 # aws clients
 DYNAMO_CLIENT = boto3.resource('dynamodb')
