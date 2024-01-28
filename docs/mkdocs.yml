@@ -1,0 +1,81 @@
+site_name: Awesome Stuff
+site_description: A curated list of awesome test-stuff
+site_author: "Test Site"
+repo_name: mrc0der/test-code
+repo_url: http://github.com/mrc0der/test-code
+edit_uri: "edit/main/docs/"
+
+plugins:
+  - search
+  - git-revision-date-localized
+  - mkdocs-video
+
+theme:
+  name: material
+  language: en
+  features:
+    - search.highlight
+    - search.share
+    - content.code.annotate
+    - navigation.top
+    - content.action.edit
+  palette:
+    - scheme: elastic-engineering-light
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+    - scheme: slate
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+  # logo: 'https://c0e9a73362c5d06f19d6-b39ff74cb91d713ac1253c5ae00eaccb.ssl.cf1.rackcdn.com/UI/logos/PNG/Rackspace_Icon_wt.png'
+  # favicon: 'https://c0e9a73362c5d06f19d6-b39ff74cb91d713ac1253c5ae00eaccb.ssl.cf1.rackcdn.com/UI/favicon/favicon.ico'
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+
+extra_css:
+  - stylesheets/extra.css
+
+# nav:
+#   - Home: index.md
+# - General:
+#   - Contributing: contributing/index.md
+# - Architecture Frameworks: arch-frameworks/index.md
+# - AWS Solutions: aws-solutions/index.md
+# - Azure Solutions: azure-solutions/index.md
+# - GCP Solutions: gcp-solutions/index.md
+# - CI/CD Solutions: cicd-solutions/index.md
+# - Security Solutions: sec-solutions/index.md
+# - Programming Languages: programming-languages/index.md
+# - Infrastructure As Code: iac/index.md
+# - Kubernetes: kubernetes/index.md
+# - Observability: observability/index.md
+# - Newsletters & Podcasts: newsletters-podcasts/index.md
+# - Training & Courses: training-courses/index.md
+# - Certifcations: certifications/index.md
+# - Books: books/index.md
+# - Communities: communities/index.md
+# - Conferences: conferences/index.md
+# - Tech Talks: tech-talks/index.md
+# - Internal Websites: internal-www/index.md
+# - External Websites: external-www/index.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - meta
+  - codehilite:
+      guess_lang: false
+  - toc:
+      permalink: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.details
