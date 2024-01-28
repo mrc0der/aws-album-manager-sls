@@ -4,6 +4,22 @@ import glob
 import zipfile
 import sys
 import threading
+import hashlib
+import hmac
+import base64
+
+def generate_hmac_signature(secret_key, message):
+    message_bytes = message.encode('utf-8')
+    secret_key_bytes = secret_key.encode('utf-8')
+    signature = hmac.new(secret_key_bytes, message_bytes, hashlib.sha256).digest()
+    signature_base64 = base64.b64encode(signature).decode('utf-8')
+    return signature_base64
+
+# Usage example
+secret_key = "your_shared_secret_key"
+request_content = "your_request_content_here"
+signature = generate_hmac_signature(secret_key, request_content)
+
 
 class ProgressPercentage(object):
     def __init__(self, filename):

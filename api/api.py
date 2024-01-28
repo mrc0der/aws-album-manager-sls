@@ -1,5 +1,6 @@
 import json
 import boto3
+from botocore.exceptions import ClientError
 import requests
 import jinja2
 import os
@@ -8,12 +9,66 @@ import tempfile
 import uuid
 
 S3_EXP = 3600
-PP_CLIENT_ID = 'your_client_id' # Read from ssm params
-PP_CLIENT_SECRET = 'your_secret'
+PP_CLIENT_ID = get_secret_from_ssm("/album-manager/prod/paypal_cleint_id")
+PP_CLIENT_SECRET = get_secret_from_ssm("/album-manager/prod/paypal_cleint_secret")
 
+# aws clients
 DYNAMO_CLIENT = boto3.resource('dynamodb')
 S3_CLIENT = boto3.client('s3')
-ses = boto3.client('ses')
+SES_CLIENT = boto3.client('ses')
+SSM_CLIENT = boto3.client('ssm')
+
+
+def get_secret_from_ssm(parameter_name, with_decryption=True):
+    """
+    Retrieve a secret value from AWS Systems Manager Parameter Store.
+
+    Args:
+        parameter_name (str): The name of the parameter you want to retrieve.
+        with_decryption (bool): Whether to decrypt the parameter value (for SecureString types).
+
+    Returns:
+        str: The value of the parameter if successful, None otherwise.
+    """
+    # Initialize the SSM client
+    
+
+    try:
+        # Get the parameter
+        response = SSM_CLIENT.get_parameter(
+            Name=parameter_name,
+            WithDecryption=with_decryption
+        )
+        # Return the parameter value
+        return response['Parameter']['Value']
+    except ClientError as e:
+        print(f"Failed to retrieve parameter {parameter_name}: {e}")
+        return None
+
+# AWS Lambda example
+def validate_request(event):
+    received_signature = event['headers'].get('X-Signature')
+    request_content = event['body']  # Or however you're passing the content
+
+    # Regenerate the HMAC signature
+    secret_key = "your_shared_secret_key"
+    generated_signature = generate_hmac_signature(secret_key, request_content)
+
+    # Verify if the received signature matches the generated one
+    if hmac.compare_digest(received_signature, generated_signature):
+        # Proceed with processing the request
+        return {
+            'statusCode': 200,
+            'body': json.dumps('Request authenticated successfully')
+        }
+    else:
+        # Handle authentication failure
+        return {
+            'statusCode': 403,
+            'body': json.dumps('Authentication failed')
+        }
+
+
 
 # Initialize the Jinja2 environment
 templateLoader = jinja2.FileSystemLoader(searchpath="./email_templates")
@@ -122,6 +177,12 @@ def create_client(event, context):
 
 
 def zip_handler(event, context):
+    if not validate_request(event):
+        return {
+            'statusCode': 401,
+            'body': json.dumps('Request not validated')
+        }
+
     client_name = event['client_name']
     album_name = event['album_name']
     email = event['email']  # Customer email
@@ -162,7 +223,7 @@ def send_email_with_download_link(email, zip_file_key):
     presigned_url = S3_CLIENT.generate_presigned_url('get_object', Params={'Bucket': 'your-bucket-name', 'Key': zip_file_key}, ExpiresIn=3600)
 
     # Send an email using SES
-    ses.send_email(
+    SES_CLIENT.send_email(
         Source='your-email@example.com',
         Destination={'ToAddresses': [email]},
         Message={
@@ -185,10 +246,8 @@ def send_email_with_template(recipient, fullname, links):
     # Render the template with the provided data
     body_html = template.render(fullname=fullname, links=links)
 
-    ses_client = boto3.client('ses')
-
     try:
-        response = ses_client.send_email(
+        response = SES_CLIENT.send_email(
             Destination={'ToAddresses': [recipient]},
             Message={
                 'Body': {
