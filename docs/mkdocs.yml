@@ -28,8 +28,6 @@ theme:
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
-  # logo: 'https://c0e9a73362c5d06f19d6-b39ff74cb91d713ac1253c5ae00eaccb.ssl.cf1.rackcdn.com/UI/logos/PNG/Rackspace_Icon_wt.png'
-  # favicon: 'https://c0e9a73362c5d06f19d6-b39ff74cb91d713ac1253c5ae00eaccb.ssl.cf1.rackcdn.com/UI/favicon/favicon.ico'
   icon:
     repo: fontawesome/brands/github
     edit: material/pencil
