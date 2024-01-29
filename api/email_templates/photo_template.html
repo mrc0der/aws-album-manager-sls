@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Your Photos are Ready</title>
+</head>
+<body>
+    <h1>{{ fullname }}, your files are attached:</h1>
+    {% for link in links %}
+        <p><a href="{{ link }}">{{ link }}</a></p>
+    {% endfor %}
+</body>
+</html>
